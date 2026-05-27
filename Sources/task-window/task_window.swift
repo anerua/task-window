@@ -590,7 +590,7 @@ private struct AboutView: View {
             Text("Task Window")
                 .font(.headline)
             Text("A simple menu bar task app for macOS.")
-            Text("Author: anerua")
+            Text("Author: Anerua")
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
