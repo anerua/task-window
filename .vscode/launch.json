@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:task-window}",
+            "name": "Debug task-window",
+            "target": "task-window",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug task-window"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:task-window}",
+            "name": "Release task-window",
+            "target": "task-window",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release task-window"
+        }
+    ]
+}

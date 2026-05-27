@@ -629,7 +629,7 @@ private struct TaskListPromptView: View {
 
 enum AppRuntime {
 #if os(macOS)
-    static var coordinator: AppCoordinator?
+    nonisolated(unsafe) static var coordinator: AppCoordinator?
 #endif
 }
 
