@@ -589,8 +589,10 @@ private struct AboutView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Task Window")
                 .font(.headline)
-            Text("A simple menu bar task app for macOS.")
-            Text("Author: @anerua")
+            Text("A simple menu bar todo app for macOS.")
+            Text("Author: @anerua, @copilot")
+                .foregroundStyle(.secondary)
+            Text("Copyright © 2026 Martins Anerua. All rights reserved.")
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
