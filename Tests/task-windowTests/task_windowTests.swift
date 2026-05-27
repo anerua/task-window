@@ -14,7 +14,7 @@ func taskOrderingGroupsByCompletionThenDate() {
 
     let ordered = TaskOrdering.sort(tasks)
 
-    #expect(ordered.map(\ .text) == [
+    #expect(ordered.map(\.text) == [
         "Pending oldest",
         "Pending newest",
         "Completed old",
@@ -33,5 +33,5 @@ func taskListSortedTasksUsesOrderingRules() {
         ]
     )
 
-    #expect(list.sortedTasks.map(\ .text) == ["todo", "done"])
+    #expect(list.sortedTasks.map(\.text) == ["todo", "done"])
 }

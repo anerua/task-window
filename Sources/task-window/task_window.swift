@@ -36,7 +36,7 @@ public enum TaskOrdering {
     public static func sort(_ tasks: [TaskItem]) -> [TaskItem] {
         tasks.sorted { lhs, rhs in
             if lhs.isCompleted != rhs.isCompleted {
-                return lhs.isCompleted == false
+                return !lhs.isCompleted
             }
             return lhs.createdAt < rhs.createdAt
         }
@@ -212,7 +212,7 @@ final class TaskAppModel: ObservableObject {
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            // Ignore startup registration errors in local/dev environments.
+            // Registration can fail without the required app signing/entitlements in development.
         }
     }
 }
