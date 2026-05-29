@@ -1,4 +1,6 @@
-# task-window
+# Task Window
+
+Simple ToDo app for mac that lives in the Menu Bar
 
 Everything I want in a simple and free ToDo app for a mac vibe coded in one afternoon with copilot
 

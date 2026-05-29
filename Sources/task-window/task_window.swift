@@ -68,9 +68,11 @@ final class TaskAppModel: ObservableObject {
     private let stateURL: URL?
     private let defaults = UserDefaults.standard
     private let launchAtLoginKey = "launchAtLoginEnabled"
+    private let launchAgentLabel: String
 
     init() {
         self.stateURL = Self.makeStateURL()
+        self.launchAgentLabel = (Bundle.main.bundleIdentifier ?? "com.anerua.task-window") + ".login"
         if defaults.object(forKey: launchAtLoginKey) == nil {
             launchAtLoginEnabled = true
             defaults.set(true, forKey: launchAtLoginKey)
@@ -211,9 +213,88 @@ final class TaskAppModel: ObservableObject {
             } else {
                 try SMAppService.mainApp.unregister()
             }
+            syncLaunchAtLoginStateFromSystem()
         } catch {
-            // Registration can fail without the required app signing/entitlements in development.
+            // Fallback for local/dev builds where SMAppService registration can fail.
+            applyLaunchAgentFallback(enabled: launchAtLoginEnabled)
+            syncLaunchAtLoginStateFromSystem()
         }
+    }
+
+    private func syncLaunchAtLoginStateFromSystem() {
+        if #available(macOS 13.0, *) {
+            switch SMAppService.mainApp.status {
+            case .enabled:
+                launchAtLoginEnabled = true
+                return
+            case .notFound:
+                break
+            case .notRegistered:
+                break
+            case .requiresApproval:
+                launchAtLoginEnabled = true
+                return
+            @unknown default:
+                break
+            }
+        }
+        launchAtLoginEnabled = launchAgentIsInstalled()
+    }
+
+    private func launchAgentIsInstalled() -> Bool {
+        guard let launchAgentURL else { return false }
+        return FileManager.default.fileExists(atPath: launchAgentURL.path)
+    }
+
+    private var launchAgentURL: URL? {
+        guard let libraryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        let agentsDir = libraryURL.appendingPathComponent("LaunchAgents", isDirectory: true)
+        try? FileManager.default.createDirectory(at: agentsDir, withIntermediateDirectories: true)
+        return agentsDir.appendingPathComponent("\(launchAgentLabel).plist")
+    }
+
+    private func applyLaunchAgentFallback(enabled: Bool) {
+        guard let launchAgentURL else { return }
+
+        if enabled {
+            guard let plistData = launchAgentPlistData() else { return }
+            do {
+                try plistData.write(to: launchAgentURL, options: .atomic)
+                runLaunchctl(arguments: ["bootstrap", "gui/\(getuid())", launchAgentURL.path])
+            } catch {
+                return
+            }
+        } else {
+            runLaunchctl(arguments: ["bootout", "gui/\(getuid())", launchAgentURL.path])
+            try? FileManager.default.removeItem(at: launchAgentURL)
+        }
+    }
+
+    private func launchAgentPlistData() -> Data? {
+        guard let executablePath = Bundle.main.executableURL?.path else {
+            return nil
+        }
+
+        let plist: [String: Any] = [
+            "Label": launchAgentLabel,
+            "ProgramArguments": [executablePath],
+            "RunAtLoad": true,
+            "KeepAlive": false
+        ]
+
+        return try? PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+    }
+
+    private func runLaunchctl(arguments: [String]) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        process.arguments = arguments
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+        try? process.run()
+        process.waitUntilExit()
     }
 }
 
@@ -574,6 +655,7 @@ private struct SettingsView: View {
     @ObservedObject var model: TaskAppModel
 
     var body: some View {
+        // Still a little buggy
         Toggle(
             "Start at login",
             isOn: Binding(
